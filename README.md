@@ -40,6 +40,17 @@ Podria haber sido interesante crear un TDA protocolo, pero la idea de que el pro
 el owner del socket no terminaba de convencerme. 
 
 
-### 2. Diagrama de la solucion
+### 2. Diagrama de la solución
+
+Dado que la arquitectura general es bastante simple decidí hacer un diagrama de actividad
+del cliente que fue la sección que me resulto más complicada de realizar y que puede
+resultar un poco dificil de seguir. El siguiente diagrama muestra las distintas funciones por
+las que pasa una linea leida del archivo hasta enviarse al servidor. Estos pasos se realizan por
+cada linea hasta terminar el archivo.
+
+![diagrama](diagrama_actividad.png)
+
+
+
 
 
