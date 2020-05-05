@@ -48,8 +48,9 @@ resultar un poco dificil de seguir. El siguiente diagrama muestra las distintas 
 las que pasa una linea leida del archivo hasta enviarse al servidor. Estos pasos se realizan por
 cada linea hasta terminar el archivo.
 
+<p align="center">
 ![diagrama](diagrama_actividad.png)
-
+</p>
 
 
 
