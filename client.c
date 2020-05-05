@@ -57,15 +57,8 @@ static void _leerArchivo(client_t *self,FILE* file){
 	char tmp[32];
 	memset(tmp,0,sizeof(tmp));
 	while(fin!=0){
-		//printf("empezamos nueva linea\n");
 		char *linea=(char*)calloc(MAX_LINEA,sizeof(char));
 		fin=_leerLinea(file,linea,&largo_linea,tmp,strlen(tmp));
-		/*printf("vamos a imprimir linea\n");
-		printf("largo de la linea: %d\n", largo_linea);
-		 for (int i = 0; i <largo_linea+1; ++i) {
-			 printf("%c", linea[i]);
-		 }
-		 printf("termine de  imprimir linea\n");*/
 		 _codificar_linea(self,linea,id);
 		 _recibirok(self,id);
 		 largo_linea=0;
@@ -73,8 +66,6 @@ static void _leerArchivo(client_t *self,FILE* file){
 		id=id+1;
 	}
 	_closeclient(self);
-	//printf("\n");
-	//printf("terminamos!\n");
 }
 
 static void _recibirok(client_t *self,uint32_t id){
@@ -251,10 +242,6 @@ static void _enviardescripcion(client_t *self,uint32_t tamarray,
 	memcpy(offset+4,&tambody,sizeof(tambody));
 	memcpy(offset+8,&id,sizeof(id));
 	memcpy(offset+12,&tamarray,sizeof(tamarray));
-	/*printf("linea tiene: \n");
-		for (int i = 0; i <16; ++i) {
-		printf("%x", linea[i]);
-	}*/
 	//TCP send 16 bytes
 	TCPsocket_send(&self->socket,linea,TAM_DESCRIPCION);
 	free(linea);
@@ -264,11 +251,6 @@ static void _enviarparametro(client_t *self,char *parametro,
 							 uint32_t tamparametro){
 	char *linea=malloc(tamparametro);
 	memcpy(linea,parametro,tamparametro);
-	/*printf("parametro tiene: \n");
-		for (int i = 0; i <tamparametro; ++i) {
-		printf("%x", linea[i]);
-	}
-	printf("\n");*/
 	//TCP send tamparametro bytes
 	TCPsocket_send(&self->socket,linea,tamparametro);
 	free(parametro);

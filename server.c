@@ -42,13 +42,10 @@ static void _decodificar(server_t *self,char* buffer){
 	uint32_t longbody,id,longarray;
 	buffer=buffer+4; //salteo los primeros 4 que no me sirven
 	memcpy(&longbody,buffer,4);
-	//printf("long del body es :%d\n",longbody);
 	buffer=buffer+4; //salto al id
 	memcpy(&id,buffer,4);
-	//printf("id es :%d\n",id);
 	buffer=buffer+4; //salto a la long del array
 	memcpy(&longarray,buffer,4);
-	//printf("long de array es :%d\n",longarray);
 	_decodificar_array(self,longarray,longbody,id);
 }
 
@@ -80,7 +77,6 @@ static void _decodificar_array(server_t *self,uint32_t longarray,
 				cantidad=_cant_parametros(self,&pos);
 				break;
 		}
-		//printf("posicion vale: %d\n",pos);
 	}
 	_imprimir(self,id,destino,path,interfaz,metodo,longbody,cantidad);
 	free(destino);
