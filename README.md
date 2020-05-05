@@ -1,19 +1,18 @@
-### tp1
-## Eleonora Luna 
-## Padron 96444
+# Tp1
+## Eleonora Luna Padron 96444
 
-## [Repositorio de Github] (https://github.com/eleonoraluna/tp1.git)
+## Repositorio de Github https://github.com/eleonoraluna/tp1.git
 
-## Aclaraciones del alumno
+### Aclaraciones del alumno
 El siguiente release corre las primeras dos pruebas del sercom pero no la última.
 
-## 1. Arquitectura General
+### 1. Arquitectura General
 
 Para la solucion del trabajo practico se crearon los siguientes TDAs client, server y TCPsocket.
 Tanto el cliente como el servidor tienen su propio main y hacen uso del TDA TCPsocket para 
 comunicarse entre ellos.
 
-# Cliente
+### Cliente
 
 El cliente es owner de un sockTCP_t que se conecta al servidor y le envía las distintas
 llamadas implementando el protocolo establecido a traves del socket.
@@ -22,7 +21,7 @@ sino por stdin. Lee de a lineas y codifica cada una y luego la envía a traves d
 para que le llegue al servidor. Realiza esto hasta que se haya terminado el archivo y
 cierra la comunicación. 
 
-# Servidor
+### Servidor
 
 El servidor es owner de un sockTCP_t a través del cual recibe las llamadas codificadas
 por el cliente y las decodifica implementando el protocolo establecido.
@@ -31,7 +30,7 @@ pantalla los datos pedidos. Luego de imprimir los datos de cada linea, le envia 
 el mensaje "OK".El servidor termina cuando el cliente cierra el canal.
 
 
-# TCPsocket
+### TCPsocket
 
 Este TDA representa un socket para protocolo TCP. Se encarga de recibir y enviar los 
 buffers que le pasan por parámetros. Tambien se encarga de asegurarse que se envien y 
@@ -41,6 +40,6 @@ Podria haber sido interesante crear un TDA protocolo, pero la idea de que el pro
 el owner del socket no terminaba de convencerme. 
 
 
-## 2. Diagrama de la solucion
+### 2. Diagrama de la solucion
 
 
