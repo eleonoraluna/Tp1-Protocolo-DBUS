@@ -3,7 +3,7 @@
 
 ## Repositorio de Github https://github.com/eleonoraluna/tp1.git
 
-##Informe
+## Informe
 
 ### 1. Arquitectura General
 
