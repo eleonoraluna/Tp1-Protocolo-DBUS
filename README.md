@@ -3,9 +3,7 @@
 
 ## Repositorio de Github https://github.com/eleonoraluna/tp1.git
 
-### Aclaraciones del alumno
-El siguiente release corre las primeras dos pruebas del sercom pero no la última porque esta mal
-parseada la parte de separar los parametros de las llamadas.
+##Informe
 
 ### 1. Arquitectura General
 
