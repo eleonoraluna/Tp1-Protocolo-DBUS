@@ -14,6 +14,7 @@ const int MAX_MET=128;
 const int MAX_ARG=64;
 const int TIPO_PARAM=4;
 const int TAM_DESCRIPCION=16;
+const int MAX_TAM_ARG=70;
 
 int main(int argc, char *argv[]) {
    if (argc >= 3) {
@@ -104,10 +105,10 @@ static int _leerLinea(FILE* file,char *linea,int *largo,char *tmp, int tamtmp){
 static void _codificar_linea(client_t *self,char *linea,uint32_t id){
 	char destino[MAX_DES],path[MAX_PATH],interfaz[MAX_INT],metodo[MAX_MET],
 			nombremetodo[MAX_MET],argumentos[MAX_ARG];
-	int tamarraysinpad=0,tamdest,tampath,tamint,tammet,tamfirma,
-		tamfirmapad,tambody,cantargs;
+	int tamarraysinpad=0,tamdest,tampath,tamint,tammet,tamfirma=0,
+		tamfirmapad,tambody=0,cantargs;
 	char* d; char* p; char* i; char* m; char* f; char* b;
-	sscanf(linea,"%s %s %s %s",destino,path,interfaz,metodo);
+	sscanf(linea,"%s %s %s %[^\n]",destino,path,interfaz,metodo);
 	_convertir_parametro(destino,&d,6,1,'s',0,&tamdest);
 	_convertir_parametro(path,&p,1,1,'o',0,&tampath);
 	_convertir_parametro(interfaz,&i,2,1,'s',0,&tamint);
@@ -210,22 +211,20 @@ static int _contarargumentos(char *argumentos){
 
 static void _convertir_body(char *argumentos,char **body,int *tambody,
 		                    uint8_t cantargumentos){
+	char argumento[MAX_TAM_ARG];
 	uint8_t barracero=0;
-	uint32_t longitud;
-	if(cantargumentos!=1){
-		longitud=1;
-	} else {
-		longitud=strlen(argumentos);
-	}
-	uint32_t totalbody=cantargumentos*(longitud+4+1);//param+tam+\0
-	*tambody=totalbody;
-	*body=(char*)malloc(totalbody);
+	uint32_t tamarg;
+	*body=(char*)malloc(cantargumentos*(MAX_TAM_ARG+4+1));
 	char *offset=*body;
-	for(int i=0; i<cantargumentos; i++){
-	memcpy(offset+i*6,&longitud,sizeof(longitud));
-	memcpy(offset+i*6+4,argumentos,longitud);
-	memcpy(offset+i*6+4+longitud,&barracero,1);
-	argumentos=argumentos+2;
+	for (int i=0; i<cantargumentos; i++){
+		sscanf(argumentos,"%[^,],",argumento);
+		tamarg=strlen(argumento);
+		memcpy(offset,&tamarg,sizeof(tamarg));//copio el tamanio
+		memcpy(offset+4,argumento,tamarg);//copio el argumento
+		memcpy(offset+4+tamarg,&barracero,1);//el /0
+		offset=offset+tamarg+4+1;//sig pos donde quiero copiar
+		argumentos=argumentos+tamarg+1;//apunto al sig arg
+		*tambody=*tambody+4+1+tamarg;
 	}
 }
 
@@ -233,7 +232,7 @@ static void _enviardescripcion(client_t *self,uint32_t tamarray,
 								uint32_t tambody,char* endian,
 								uint8_t tipo, uint32_t id){
 	uint8_t barracero=0;
-	char *linea=malloc(16);
+	char *linea=calloc(4,4);
 	char *offset=linea;
 	memcpy(offset,endian,1);
 	memcpy(offset+1,&tipo,1);
