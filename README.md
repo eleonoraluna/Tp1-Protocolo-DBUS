@@ -48,7 +48,7 @@ las que pasa una linea leida del archivo hasta enviarse al servidor. Estos pasos
 cada linea hasta terminar el archivo.
 
 <p align="center">
-<img src="diagrama_actividad.png">
+<img src="diagrama_actividad2.png">
 </p>
 
 
