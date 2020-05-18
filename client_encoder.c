@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <arpa/inet.h>
 #include "client_encoder.h"
+#include "client_line_reader.h"
 
 const int READ_BUFFER=32;
 const int MAX_LINE=176;
@@ -15,15 +17,16 @@ const int TYPE_PARAM=4;
 const int DESCRIPTION_SIZE=16;
 const int MAX_SIZE_ARG=70;
 const int SIZE_MESSAGE_RCV=3;
-const int ARGS_CLIENT_WITH_FILE=4;
 
-void client_encoder_create(encoder_t *self,char* argv[]){
+
+int client_encoder_create(encoder_t *self,char* argv[]){
+	int connect;
 	TCPsocket_create(&self->socket);
-	TCPsocket_connect(&self->socket,argv[1],argv[2]);
-}
-
-static void _close(encoder_t *self){
-	TCPsocket_destroy(&self->socket);
+	connect=TCPsocket_connect(&self->socket,argv[1],argv[2]);
+	if (connect==1){
+		return 1;
+	}
+	return 0;
 }
 
 static void _rcv_message(encoder_t *self,uint32_t id){
@@ -152,7 +155,6 @@ static void _send_parameter(encoder_t *self,char *parameter,
 							 uint32_t parametersize){
 	char *line=malloc(parametersize);
 	memcpy(line,parameter,parametersize);
-	//TCP send tamparametro bytes
 	TCPsocket_send(&self->socket,line,parametersize);
 	free(parameter);
 	free(line);
@@ -185,67 +187,30 @@ static void _encode_line(encoder_t *self,char *line,uint32_t id){
 		_send_parameter(self,b,bodysize);
 	}
 }
-
-static int _read_line(FILE* file,char *line,int *length,char *tmp, int sizetmp){
-	 char buffer[READ_BUFFER+1];
-	 uint32_t dif,size_newline;
-	 int line_complete=0,offset=0,read_elements=0;
-	 memcpy(line,tmp,sizetmp);
-	 memset(tmp,0,sizetmp);
-	 while (line_complete==0){
-		 memset(buffer,0,sizeof(buffer));
-		 read_elements=fread(buffer,READ_BUFFER, 1, file);
-		 if (strchr(buffer,'\n') != NULL) {
-			 char* ptr_newline=strchr(buffer,'\n');
-			dif=&*ptr_newline-buffer;
-			size_newline=sizeof(buffer)-dif;
-			//lo que quedo despues del\n
-			memcpy(tmp,ptr_newline+1,size_newline);
-			//lo que quedo hasta el \n
-			memcpy(line+sizetmp+(offset*READ_BUFFER),buffer,dif);
-			*length=*length+sizetmp+dif;
-			line_complete=1;
-		 }else{
-			 memcpy(line+sizetmp+(offset*READ_BUFFER),buffer,sizeof(buffer));
-			*length=*length+sizetmp+READ_BUFFER;
-			offset=offset+1;
-		 }
-	 }
-	 return read_elements;
+void client_encoder_run(encoder_t *self,int argc, char *argv[]){
+	   reader_t reader;
+	   if (client_reader_create(argc,argv,&reader)==0){
+	   	int end=1;
+	   	uint32_t id=1;
+	   	char tmp[READ_BUFFER+1];
+	   	char line[MAX_LINE];
+	   	memset(tmp,0,sizeof(tmp));
+	   	memset(line,0,MAX_LINE);
+	   	while(end!=0){
+	   		end=_read_line(&reader,line,tmp,strlen(tmp));
+	   		 _encode_line(self,line,id);
+	   		 _rcv_message(self,id);
+	   		memset(line,0,MAX_LINE);
+	   		id=id+1;
+	   	}
+	   	client_reader_close(&reader);
+	   }
 }
 
-static void _read_file(encoder_t *self,FILE* file){
-	int end=1,length_line=0;
-	uint32_t id=1;
-	char tmp[READ_BUFFER+1];
-	char line[MAX_LINE];
-	memset(tmp,0,sizeof(tmp));
-	memset(line,0,sizeof(line));
-	while(end!=0){
-		end=_read_line(file,line,&length_line,tmp,strlen(tmp));
-		 _encode_line(self,line,id);
-		 _rcv_message(self,id);
-		 length_line=0;
-		memset(line,0,sizeof(line));
-		id=id+1;
+void client_encoder_destroy(encoder_t *self){
+	int destroy;
+	destroy=TCPsocket_destroy(&self->socket);
+	if(destroy==1){
+		printf("Error al destruir socket \n");
 	}
-	_close(self);
-}
-
-int client_encoder_selectInput(int argc, char *argv[],encoder_t *self){
-	FILE *input;
-	if (argc==ARGS_CLIENT_WITH_FILE-1){
-		input = stdin;
-		_read_file(self,input);
-	} else {
-		input=fopen(argv[3],"rt");
-		if (!input) {
-			printf("No se pudo abrir el archivo\n");
-			return 1;
-		} else {
-			_read_file(self,input);
-			fclose(input);
-		}
-	}
-	return 0;
 }

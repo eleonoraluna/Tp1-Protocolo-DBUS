@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <arpa/inet.h>
@@ -14,6 +13,19 @@ const int SIZE_DESCRIPTION_HEADER=16;
 //cant de bytes de la descripcion del parametro sin el byte del tipo
 const int SIZE_DESCRIPTION_PARAMETER=3;
 const int SIZE_TYPE=1;
+
+
+int server_decoder_create(decoder_t *self,char* argv[]){
+	int bind,listen,accept;
+	TCPsocket_create(&self->socket);
+	bind=TCPsocket_bind(&self->socket,argv[1]);
+	listen=TCPsocket_listen(&self->socket);
+	accept=TCPsocket_accept(&self->socket);
+	if (bind==1 || listen==1 || accept==1){
+		return 1;
+	}
+	return 0;
+}
 
 static int _multiple8(int length){
 	int l=length;
@@ -129,22 +141,18 @@ static void _sendok(decoder_t *self){
 	TCPsocket_send(&self->socket,buffer,sizeof(buffer));
 }
 
-static void _close(decoder_t *self){
-	TCPsocket_destroy(&self->socket);
-}
-
-void server_decoder_rcvMessages(decoder_t *self){
+void server_decoder_run(decoder_t *self){
 	char buffer[SIZE_DESCRIPTION_HEADER];
 	while((TCPsocket_recieve(&self->socket,buffer,sizeof(buffer))) !=-1){
 		_decode(self,buffer);
 		_sendok(self);
 	}
-	_close(self);
 }
 
-void server_decoder_create(decoder_t *self,char* argv[]){
-	TCPsocket_create(&self->socket);
-	TCPsocket_bind(&self->socket,argv[1]);
-	TCPsocket_listen(&self->socket);
-	TCPsocket_accept(&self->socket);
+void server_decoder_destroy(decoder_t *self){
+	int destroy;
+	destroy=TCPsocket_destroy(&self->socket);
+	if(destroy==1){
+		printf("Error al destruir socket\n");
+	}
 }
