@@ -1,9 +1,8 @@
 # Tp1-Protocolo DBUS
-## **Apellido y nombre:** Eleonora Luna 
-## **Padron:** 96444
+**Apellido y nombre:** Eleonora Luna 
+**Padron:** 96444
 
-## Repositorio de Github 
-https://github.com/eleonoraluna/tp1.git
+## Repositorio de Github https://github.com/eleonoraluna/tp1.git
 
 ## Informe
 
@@ -34,7 +33,7 @@ Hace uso de un decoder_t a través del cual recibe las llamadas codificadas por 
 implementando el protocolo establecido para luego imprimir por pantalla los datos pedidos.El servidor termina 
 cuando el cliente cierra el canal.
 
-### TCPsocket
+### sockTCP_t
 
 Este TDA representa un socket para protocolo TCP. Se encarga de recibir y enviar los 
 buffers que le pasan por parámetros. Tambien se encarga de asegurarse que se envien y 
