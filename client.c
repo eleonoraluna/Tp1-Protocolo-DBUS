@@ -7,7 +7,7 @@
 int main(int argc, char *argv[]) {
    if (argc >= 3) {
 	   encoder_t encoder;
-	   if(client_encoder_create(&encoder,argv)==0){
+	   if (client_encoder_create(&encoder,argv)==0){
 	   client_encoder_run(&encoder,argc,argv);
 	   client_encoder_destroy(&encoder);
 	   }

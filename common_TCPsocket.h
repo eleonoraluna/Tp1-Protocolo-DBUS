@@ -6,7 +6,7 @@ typedef struct{
 }sockTCP_t;
 
 void TCPsocket_create(sockTCP_t *self);
-int TCPsocket_bind(sockTCP_t *self,char *puerto);
+int TCPsocket_bind(sockTCP_t *self,char *port);
 int TCPsocket_listen(sockTCP_t *self);
 int TCPsocket_accept(sockTCP_t *self);
 int TCPsocket_connect(sockTCP_t *self, char *name, char *p);

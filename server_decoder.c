@@ -10,8 +10,8 @@ const int MAX_INT=32;
 const int MAX_MET=126;
 const int MAX_PARAM=72;
 const int SIZE_DESCRIPTION_HEADER=16;
-//cant de bytes de la descripcion del parametro sin el byte del tipo
-const int SIZE_DESCRIPTION_PARAMETER=3;
+//los primeros 4 bytes de cada parametro
+const int SIZE_DESCRIPTION_PARAMETER=4;
 const int SIZE_TYPE=1;
 
 
@@ -62,7 +62,7 @@ static void _print(decoder_t *self,uint32_t id,char *dest,char *path,
 }
 
 static void _decode_parameter(decoder_t *self,int* pos, char *buffer){
-	char tmp[SIZE_DESCRIPTION_PARAMETER];
+	char tmp[SIZE_DESCRIPTION_PARAMETER-1];
 	uint32_t lengthparam;
 	//hago un rcv de 3 que no me sirve para nada
 	TCPsocket_recieve(&self->socket,tmp,sizeof(tmp));
@@ -77,7 +77,7 @@ static void _decode_parameter(decoder_t *self,int* pos, char *buffer){
 
 static uint8_t _count_parameters(decoder_t *self,int* pos){
 	uint8_t count_param,offset,lengthfirm,padding;
-	char tmp[SIZE_DESCRIPTION_PARAMETER],tmp2[MAX_PARAM];
+	char tmp[SIZE_DESCRIPTION_PARAMETER-1],tmp2[MAX_PARAM];
 	//hago un rcv de 3 que no me sirve para nada
 	TCPsocket_recieve(&self->socket,tmp,sizeof(tmp));
 	//hago un rcv de 1 para la cant de param
@@ -95,11 +95,8 @@ static uint8_t _count_parameters(decoder_t *self,int* pos){
 
 static void _decode_array(decoder_t *self,uint32_t lengtharray,
 							   uint32_t lengthbody,uint32_t id){
-	char interface[MAX_INT];
-	char dest[MAX_DES];
-	char path[MAX_PATH];
-	char method[MAX_MET];
-	char type[SIZE_TYPE];
+	char interface[MAX_INT],dest[MAX_DES],path[MAX_PATH],
+	method[MAX_MET],type[SIZE_TYPE];
 	int pos=0,c=0;
 	while (pos<lengtharray){
 		//hago un recieve de 1 byte para ver el tipo
@@ -127,12 +124,13 @@ static void _decode_array(decoder_t *self,uint32_t lengtharray,
 
 static void _decode(decoder_t *self,char* buffer){
 	uint32_t lengthbody,id,lengtharray;
-	buffer=buffer+4; //salteo los primeros 4 que no me sirven
-	memcpy(&lengthbody,buffer,4);
-	buffer=buffer+4; //salto al id
-	memcpy(&id,buffer,4);
-	buffer=buffer+4; //salto a la long del array
-	memcpy(&lengtharray,buffer,4);
+	//salteo los primeros 4 que no me sirven
+	buffer=buffer+SIZE_DESCRIPTION_PARAMETER;
+	memcpy(&lengthbody,buffer,sizeof(lengthbody));
+	buffer=buffer+sizeof(lengthbody); //salto al id
+	memcpy(&id,buffer,sizeof(id));
+	buffer=buffer+sizeof(id); //salto a la long del array
+	memcpy(&lengtharray,buffer,sizeof(lengtharray));
 	_decode_array(self,lengtharray,lengthbody,id);
 }
 

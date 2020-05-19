@@ -43,47 +43,48 @@ static int _multiple8(int length){
 	return l;
 }
 
-static void _encode_parameter(char *parameter,char **line,uint8_t paramtype
-		,uint8_t stringcount,char datatype, uint8_t zero,int *paramlength){
+static void _load_descriptionbytes(char **buffer,uint8_t paramtype,
+		                          uint8_t stringcount,char datatype){
+	//cargo los primeros 4 bytes que describen a c/ parametro
+	memcpy(*buffer,&paramtype,sizeof(paramtype));
+	memcpy(*buffer+1,&stringcount,sizeof(stringcount));
+	memcpy(*buffer+2,&datatype,sizeof(datatype));
+	memset(*buffer+3,0,1);// el\0
+}
+
+static void _encode_parameter(char *parameter,char **buffer,uint8_t paramtype,
+		                      uint8_t stringcount,char datatype,
+							  int *paramlength){
 	uint32_t lengthpadding,padding;
 	uint32_t length=strlen(parameter);
 	lengthpadding=_multiple8(length+1);
 	padding=lengthpadding-length;
-	*line=(char*)malloc(4+4+length+1+padding);
-	char *offset=*line;
-	memcpy(offset,&paramtype,sizeof(paramtype));
-	memcpy(offset+1,&stringcount,sizeof(stringcount));
-	memcpy(offset+2,&datatype,sizeof(datatype));
-	memcpy(offset+3,&zero,1);
-	memcpy(offset+4,&length,sizeof(length));
-	memcpy(offset+8,parameter,length);
+	//malloc de lo que ocupa el parametro codificado con el protocolo
+	*buffer=(char*)malloc(4+4+length+padding+1);
+	_load_descriptionbytes(buffer,paramtype,stringcount,datatype);
+	memcpy(*buffer+4,&length,sizeof(length));
+	memcpy(*buffer+8,parameter,length);
 	for (int i=0; i<=padding; i++){//agrega los ceros de padding +\0
-		memcpy(offset+8+length,&zero,1);
-		offset=offset+1;
+		memset(*buffer+8+length+i,0,1);
 	}
 	*paramlength=8+length+padding;
 }
 
-static void _encode_firm(char **line,uint8_t paramtype,uint8_t stringcount
-		,char datatype,uint8_t zero,int *firmlength,int *firmlengthpadding,
-		uint8_t argumentscount){
-	uint32_t lengthpadding,padding;
-	lengthpadding=_multiple8(4+1+argumentscount+1);
-	padding=lengthpadding-4-1-argumentscount-1;
-	*firmlengthpadding=lengthpadding;
-	*firmlength=lengthpadding-padding;
-	*line=(char*)malloc(lengthpadding);
-	char *offset=*line;
-	memcpy(offset,&paramtype,sizeof(paramtype));
-	memcpy(offset+1,&stringcount,sizeof(stringcount));
-	memcpy(offset+2,&datatype,sizeof(datatype));
-	memcpy(offset+3,&zero,1);
-	memcpy(offset+4,&argumentscount,1);
+static void _encode_firm(char **buffer,uint8_t paramtype,uint8_t stringcount,
+		                 char datatype,int *firmlength,int *firmlengthpadding,
+		                 uint8_t argumentscount){
+	uint32_t padding;
+	*firmlengthpadding=_multiple8(4+1+argumentscount+1);
+	padding=*firmlengthpadding-4-1-argumentscount-1;
+	*firmlength=*firmlengthpadding-padding;
+	*buffer=(char*)malloc(*firmlengthpadding);
+	_load_descriptionbytes(buffer,paramtype,stringcount,datatype);
+	memcpy(*buffer+4,&argumentscount,sizeof(argumentscount));
 	for (int i=0; i<argumentscount; i++){//agrega una s por cada arg
-		memcpy(offset+5+i,"s",1);
+		memcpy(*buffer+5+i,"s",1);
 	}
 	for (int i=0; i<=padding; i++){//agrega los ceros de padding +\0
-		memcpy(offset+5+argumentscount+i,&zero,1);
+		memset(*buffer+5+argumentscount+i,0,1);
 	}
 }
 
@@ -116,18 +117,18 @@ static int _firm_exists(char *method,int lengthmethod,char* arguments,
 }
 
 static void _encode_body(char *arguments,char **body,int *bodylength,
-		                    uint8_t argumentscount){
+		                 uint8_t argumentscount){
 	char argument[MAX_SIZE_ARG];
-	uint8_t zero=0;
 	uint32_t argumentsize;
+	//cantidad de args*tamanio que ocupa c/u codificado con el protocolo
 	*body=(char*)malloc(argumentscount*(MAX_SIZE_ARG+4+1));
 	char *offset=*body;
 	for (int i=0; i<argumentscount; i++){
-		sscanf(arguments,"%[^,],",argument);
+		sscanf(arguments,"%[^,],",argument);//parseo el argumento
 		argumentsize=strlen(argument);
 		memcpy(offset,&argumentsize,sizeof(argumentsize));//copio el tamanio
 		memcpy(offset+4,argument,argumentsize);//copio el argumento
-		memcpy(offset+4+argumentsize,&zero,1);//el /0
+		memset(offset+4+argumentsize,0,1);//el /0
 		offset=offset+argumentsize+4+1;//sig pos donde quiero copiar
 		arguments=arguments+argumentsize+1;//apunto al sig arg
 		*bodylength=*bodylength+4+1+argumentsize;
@@ -135,29 +136,45 @@ static void _encode_body(char *arguments,char **body,int *bodylength,
 }
 
 static void _send_description(encoder_t *self,uint32_t arraysize,
-								uint32_t bodylength,char* endian,
-								uint8_t type, uint32_t id){
-	uint8_t zero=0;
-	char *line=calloc(4,4);//tamanio descripcion 16 bytes
-	char *offset=line;
-	memcpy(offset,endian,1);
-	memcpy(offset+1,&type,1);
-	memcpy(offset+2,&zero,1);
-	memcpy(offset+3,&type,1);
-	memcpy(offset+4,&bodylength,sizeof(bodylength));
-	memcpy(offset+8,&id,sizeof(id));
-	memcpy(offset+12,&arraysize,sizeof(arraysize));
-	TCPsocket_send(&self->socket,line,DESCRIPTION_SIZE);
-	free(line);
+							  uint32_t bodylength,uint8_t endian,
+							  uint8_t type, uint32_t id){
+	char *buffer=calloc(4,4);//tamanio descripcion 16 bytes
+	buffer[0]=endian;//'l'
+	buffer[1]=type;//siempre es 1
+	buffer[2]=0; //flag en 0
+	buffer[3]=type;//otro 1
+	memcpy(buffer+4,&bodylength,sizeof(bodylength));
+	memcpy(buffer+8,&id,sizeof(id));
+	memcpy(buffer+12,&arraysize,sizeof(arraysize));
+	TCPsocket_send(&self->socket,buffer,DESCRIPTION_SIZE);
+	free(buffer);
 }
 
 static void _send_parameter(encoder_t *self,char *parameter,
-							 uint32_t parametersize){
-	char *line=malloc(parametersize);
-	memcpy(line,parameter,parametersize);
-	TCPsocket_send(&self->socket,line,parametersize);
+							uint32_t parametersize){
+	char *buffer=malloc(parametersize);
+	memcpy(buffer,parameter,parametersize);
+	TCPsocket_send(&self->socket,buffer,parametersize);
 	free(parameter);
-	free(line);
+	free(buffer);
+}
+
+static void _send_parameters(encoder_t *self,char *d,int destsize,char *p,
+		                    int pathsize,char *i,int intsize,char *m,
+							int metsize){
+	_send_parameter(self,d,destsize);
+	_send_parameter(self,p,pathsize);
+	_send_parameter(self,i,intsize);
+	_send_parameter(self,m,metsize);
+}
+
+static void _send_firmAndArgs(encoder_t *self,char* method,char *methodname,
+		                      char *arguments,int argcount,char *f,
+							  int firmsizepad,char *b,int bodysize){
+	if(_firm_exists(method,strlen(methodname),arguments,&argcount)==0){
+	   _send_parameter(self,f,firmsizepad);
+	   _send_parameter(self,b,bodysize);
+	}
 }
 
 static void _encode_line(encoder_t *self,char *line,uint32_t id){
@@ -167,30 +184,26 @@ static void _encode_line(encoder_t *self,char *line,uint32_t id){
 		firmsizepad,bodysize=0,argcount;
 	char* d; char* p; char* i; char* m; char* f; char* b;
 	sscanf(line,"%s %s %s %[^\n]",dest,path,interface,method);
-	_encode_parameter(dest,&d,6,1,'s',0,&destsize);
-	_encode_parameter(path,&p,1,1,'o',0,&pathsize);
-	_encode_parameter(interface,&i,2,1,'s',0,&intsize);
 	sscanf(method," %[^(] ",methodname);
-	_encode_parameter(methodname,&m,3,1,'s',0,&metsize);
+	_encode_parameter(dest,&d,6,1,'s',&destsize);
+	_encode_parameter(path,&p,1,1,'o',&pathsize);
+	_encode_parameter(interface,&i,2,1,'s',&intsize);
+	_encode_parameter(methodname,&m,3,1,'s',&metsize);
 	if(_firm_exists(method,strlen(methodname),arguments,&argcount)==0){
-		_encode_firm(&f,8,1,'g',0,&firmsize,&firmsizepad,argcount);
+		_encode_firm(&f,8,1,'g',&firmsize,&firmsizepad,argcount);
 		_encode_body(arguments,&b,&bodysize,argcount);
 	}
 	arraysize=destsize+pathsize+intsize+metsize+firmsize;
-	_send_description(self,arraysize,bodysize,"l",1,id);
-	_send_parameter(self,d,destsize);
-	_send_parameter(self,p,pathsize);
-	_send_parameter(self,i,intsize);
-	_send_parameter(self,m,metsize);
-	if(_firm_exists(method,strlen(methodname),arguments,&argcount)==0){
-		_send_parameter(self,f,firmsizepad);
-		_send_parameter(self,b,bodysize);
-	}
+	_send_description(self,arraysize,bodysize,'l',1,id);
+	_send_parameters(self,d,destsize,p,pathsize,i,intsize,m,metsize);
+	_send_firmAndArgs(self,method,methodname,arguments,argcount,f,firmsizepad,b
+			          ,bodysize);
 }
+
 void client_encoder_run(encoder_t *self,int argc, char *argv[]){
-	   reader_t reader;
-	   if (client_reader_create(argc,argv,&reader)==0){
-	   	int end=1;
+	 reader_t reader;
+	 if (client_reader_create(argc,argv,&reader)==0){
+	    int end=1;
 	   	uint32_t id=1;
 	   	char tmp[READ_BUFFER+1];
 	   	char line[MAX_LINE];
@@ -204,7 +217,7 @@ void client_encoder_run(encoder_t *self,int argc, char *argv[]){
 	   		id=id+1;
 	   	}
 	   	client_reader_close(&reader);
-	   }
+	 }
 }
 
 void client_encoder_destroy(encoder_t *self){

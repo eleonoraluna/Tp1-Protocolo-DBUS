@@ -10,7 +10,7 @@ void TCPsocket_create(sockTCP_t *self){
 	self->fd=-1;
 }
 
-int TCPsocket_bind(sockTCP_t *self,char *puerto){
+int TCPsocket_bind(sockTCP_t *self,char *port){
 	struct addrinfo hints;
 	struct addrinfo *ptr;
 
@@ -19,7 +19,7 @@ int TCPsocket_bind(sockTCP_t *self,char *puerto){
 	hints.ai_socktype=SOCK_STREAM; //TCP
 	hints.ai_flags=AI_PASSIVE; // AI_PASSIVE for server
 
-	if (getaddrinfo(0,puerto,&hints,&ptr)!=0){
+	if (getaddrinfo(0,port,&hints,&ptr)!=0){
 		fprintf(stderr, "Error in getaddrinfo: \n");
 		return 1;
 	}
