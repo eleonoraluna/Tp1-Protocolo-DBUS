@@ -1,8 +1,9 @@
 # Tp1-Protocolo DBUS
+
 **Apellido y nombre:** Eleonora Luna 
 **Padron:** 96444
 
-## Repositorio de Github https://github.com/eleonoraluna/tp1.git
+**Repositorio de Github:** https://github.com/eleonoraluna/tp1.git
 
 ## Informe
 
@@ -60,14 +61,12 @@ por pantalla los datos pedidos y le envía un "OK"al cliente. Se ocupa de crear 
 
 ### 2. Diagrama de la solución
 
-Dado que la arquitectura general es bastante simple decidí hacer un diagrama de actividad
-del cliente que fue la sección que me resulto más complicada de realizar y que puede
-resultar un poco dificil de seguir. El siguiente diagrama muestra las distintas funciones por
-las que pasa una linea leida del archivo hasta enviarse al servidor. Estos pasos se realizan por
-cada linea hasta terminar el archivo.
+A continuación se muestra un diagrama de secuencia de la solución que se implementó.
+Si bien no estamos utilizando objetos lo que se intenta mostrar es cómo interactúan los TDAs entre si.
+
 
 <p align="center">
-<img src="diagrama_actividad3.png">
+<img src="diagrama_secuencia.png">
 </p>
 
 
