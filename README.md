@@ -1,5 +1,6 @@
-# Tp1
-## Eleonora Luna Padron 96444
+# Tp1-Protocolo DBUS
+**Apellido y nombre:** Eleonora Luna 
+**Padron:** 96444
 
 ## Repositorio de Github https://github.com/eleonoraluna/tp1.git
 
@@ -7,27 +8,26 @@
 
 ### 1. Arquitectura General
 
-Para la solucion del trabajo practico se crearon los siguientes TDAs client, server y TCPsocket.
-Tanto el cliente como el servidor tienen su propio main y hacen uso del TDA TCPsocket para 
-comunicarse entre ellos.
+Para la solución del trabajo práctico se implementaron varios TDA's que son usados por el cliente y 
+el servidor desarrollados en sus respectivos main.
 
-### Cliente
+### Client
 
-El cliente es owner de un sockTCP_t que se conecta al servidor y le envía las distintas
-llamadas implementando el protocolo establecido a traves del socket.
-Se encarga de leer los datos a codificar a través de un archivo pasado por parámetro o 
-sino por stdin. Lee de a lineas y codifica cada una y luego la envía a traves del socket
-para que le llegue al servidor. Realiza esto hasta que se haya terminado el archivo y
-cierra la comunicación. 
+Debe recibir un host, un puerto al cual conectarse y un archivo, ya sea por parámetro o por stdin
+el cual se utilizará para leer los mensajes que deberán codificarse.
 
-### Servidor
+```
+	Ej: ./client localhost 8080 archivo.txt
+	    ./client localhost 8080 < archivo.txt
+```
 
-El servidor es owner de un sockTCP_t a través del cual recibe las llamadas codificadas
-por el cliente y las decodifica implementando el protocolo establecido.
-El servidor espera la conexión del cliente y por cada linea recibida imprime por
-pantalla los datos pedidos. Luego de imprimir los datos de cada linea, le envia al cliente 
-el mensaje "OK".El servidor termina cuando el cliente cierra el canal.
+El programa cliente hace uso de un encoder_t para codificar los mensajes y enviárselos al servidor.
 
+### Server
+
+El servidor recibe un puerto al cual debe conectarse. Hace uso de un decoder_t a través del cual 
+recibe las llamadas codificadas por el cliente y las decodifica implementando el protocolo establecido
+para luego imprimir por pantalla los datos pedidos.El servidor termina cuando el cliente cierra el canal.
 
 ### TCPsocket
 
@@ -35,9 +35,24 @@ Este TDA representa un socket para protocolo TCP. Se encarga de recibir y enviar
 buffers que le pasan por parámetros. Tambien se encarga de asegurarse que se envien y 
 reciban todos los bytes correspondientes.
 
-Podria haber sido interesante crear un TDA protocolo, pero la idea de que el protocolo fuese 
-el owner del socket no terminaba de convencerme. 
+### encoder_t
 
+Este TDA es owner del socket que será usado para comunicarse con el servidor. Se encarga de codificar los
+mensajes que se leen desde el archivo o stdin utilizando el protocolo establecido y enviarlos a través 
+del socket hacia el servidor. Para leer los mensajes utiliza el TDA reader_t. Se ocupa de crear y 
+destruir el socket.
+
+### reader_t
+
+Recibe los parámetros de entrada del programa cliente y a partir de ello decide si va a leer desde un
+archivo o desde stdin. Lee de a 32 bytes y una vez que encuentra un "\n" devuelve la linea. Lee hasta
+que se termine el archivo o en su defecto stdin. Se encarga de abrir y cerrar el archivo.
+
+### decoder_t
+
+Owner de un sockTCP_t que se usará para comunicarse con el client. Recibe las llamadas codificadas
+por el cliente y las decodifica implementando el protocolo establecido. Por cada linea recibida imprime 
+por pantalla los datos pedidos y le envía un "OK"al cliente. Se ocupa de crear y destruir el socket.
 
 ### 2. Diagrama de la solución
 
