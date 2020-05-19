@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <byteswap.h>
 #include "server_decoder.h"
 
 const int MAX_DES=24;
@@ -39,6 +40,7 @@ static void _read_parameter(decoder_t *self,char *parameter){
 	uint32_t lengthparam;
 	//hago un rcv de 4 para el tamaño del param
 	TCPsocket_recieve(&self->socket,(char*)&lengthparam,sizeof(lengthparam));
+	lengthparam=bswap_32(ntohl(lengthparam));//me aseguro el endianness
 	//hago un rcv del parametro +0
 	TCPsocket_recieve(&self->socket,parameter,lengthparam+1);
 }
@@ -68,6 +70,7 @@ static void _decode_parameter(decoder_t *self,int* pos, char *buffer){
 	TCPsocket_recieve(&self->socket,tmp,sizeof(tmp));
 	//hago un rcv de 4 que me da el tamaño
 	TCPsocket_recieve(&self->socket,(char*)&lengthparam,sizeof(lengthparam));
+	lengthparam=bswap_32(ntohl(lengthparam));//aseguro que este en mi endianness
 	*pos=*pos+7; //ya recibi 7 bytes de mi array
 	lengthparam=lengthparam+1; //el /0
 	lengthparam=_multiple8(lengthparam); //me devuelve el tamaño incluyendo padding
@@ -127,10 +130,13 @@ static void _decode(decoder_t *self,char* buffer){
 	//salteo los primeros 4 que no me sirven
 	buffer=buffer+SIZE_DESCRIPTION_PARAMETER;
 	memcpy(&lengthbody,buffer,sizeof(lengthbody));
+	lengthbody=bswap_32(ntohl(lengthbody));//aseguro que este en mi endianness
 	buffer=buffer+sizeof(lengthbody); //salto al id
 	memcpy(&id,buffer,sizeof(id));
+	id=bswap_32(ntohl(id));
 	buffer=buffer+sizeof(id); //salto a la long del array
 	memcpy(&lengtharray,buffer,sizeof(lengtharray));
+	lengtharray=bswap_32(ntohl(lengtharray));
 	_decode_array(self,lengtharray,lengthbody,id);
 }
 

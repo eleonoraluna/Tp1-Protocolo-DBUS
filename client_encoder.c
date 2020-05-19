@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <arpa/inet.h>
+#include <byteswap.h>
 #include "client_encoder.h"
 #include "client_line_reader.h"
 
@@ -57,6 +58,7 @@ static void _encode_parameter(char *parameter,char **buffer,uint8_t paramtype,
 							  int *paramlength){
 	uint32_t lengthpadding,padding;
 	uint32_t length=strlen(parameter);
+	length=bswap_32(htonl(length));//me aseguro de mandar en little end
 	lengthpadding=_multiple8(length+1);
 	padding=lengthpadding-length;
 	//malloc de lo que ocupa el parametro codificado con el protocolo
@@ -126,6 +128,7 @@ static void _encode_body(char *arguments,char **body,int *bodylength,
 	for (int i=0; i<argumentscount; i++){
 		sscanf(arguments,"%[^,],",argument);//parseo el argumento
 		argumentsize=strlen(argument);
+		argumentsize=bswap_32(htonl(argumentsize));
 		memcpy(offset,&argumentsize,sizeof(argumentsize));//copio el tamanio
 		memcpy(offset+4,argument,argumentsize);//copio el argumento
 		memset(offset+4+argumentsize,0,1);//el /0
@@ -143,6 +146,9 @@ static void _send_description(encoder_t *self,uint32_t arraysize,
 	buffer[1]=type;//siempre es 1
 	buffer[2]=0; //flag en 0
 	buffer[3]=type;//otro 1
+	bodylength=bswap_32(htonl(bodylength));//me aseguro de mandar en little
+	id=bswap_32(htonl(id));
+	arraysize=bswap_32(htonl(arraysize));
 	memcpy(buffer+4,&bodylength,sizeof(bodylength));
 	memcpy(buffer+8,&id,sizeof(id));
 	memcpy(buffer+12,&arraysize,sizeof(arraysize));
