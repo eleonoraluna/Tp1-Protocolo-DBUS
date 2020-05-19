@@ -1,8 +1,9 @@
 # Tp1-Protocolo DBUS
-**Apellido y nombre:** Eleonora Luna 
-**Padron:** 96444
+## **Apellido y nombre:** Eleonora Luna 
+## **Padron:** 96444
 
-## Repositorio de Github https://github.com/eleonoraluna/tp1.git
+## Repositorio de Github 
+https://github.com/eleonoraluna/tp1.git
 
 ## Informe
 
@@ -25,9 +26,13 @@ El programa cliente hace uso de un encoder_t para codificar los mensajes y envi�
 
 ### Server
 
-El servidor recibe un puerto al cual debe conectarse. Hace uso de un decoder_t a través del cual 
-recibe las llamadas codificadas por el cliente y las decodifica implementando el protocolo establecido
-para luego imprimir por pantalla los datos pedidos.El servidor termina cuando el cliente cierra el canal.
+El servidor recibe un puerto al cual debe conectarse.
+```
+	Ej: ./server 8080
+```
+Hace uso de un decoder_t a través del cual recibe las llamadas codificadas por el cliente y las decodifica
+implementando el protocolo establecido para luego imprimir por pantalla los datos pedidos.El servidor termina 
+cuando el cliente cierra el canal.
 
 ### TCPsocket
 
