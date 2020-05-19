@@ -14,8 +14,8 @@ el servidor desarrollados en sus respectivos main.
 
 ### Client
 
-Debe recibir un host, un puerto al cual conectarse y un archivo, ya sea por parámetro o por stdin
-el cual se utilizará para leer los mensajes que deberán codificarse.
+Debe recibir un host, un puerto al cual conectarse y un archivo, ya sea por parámetro o por stdin.
+Este último se utilizará para leer los mensajes que deberán codificarse.
 
 ```
 	Ej: ./client localhost 8080 archivo.txt
@@ -37,7 +37,7 @@ cuando el cliente cierra el canal.
 ### sockTCP_t
 
 Este TDA representa un socket para protocolo TCP. Se encarga de recibir y enviar los 
-buffers que le pasan por parámetros. Tambien se encarga de asegurarse que se envien y 
+buffers que le pasan por parámetros. También se encarga de asegurarse que se envíen y 
 reciban todos los bytes correspondientes.
 
 ### encoder_t
@@ -50,7 +50,7 @@ destruir el socket.
 ### reader_t
 
 Recibe los parámetros de entrada del programa cliente y a partir de ello decide si va a leer desde un
-archivo o desde stdin. Lee de a 32 bytes y una vez que encuentra un "\n" devuelve la linea. Lee hasta
+archivo o desde stdin. Lee de a 32 bytes y una vez que encuentra un "\n" devuelve la línea. Lee hasta
 que se termine el archivo o en su defecto stdin. Se encarga de abrir y cerrar el archivo.
 
 ### decoder_t
